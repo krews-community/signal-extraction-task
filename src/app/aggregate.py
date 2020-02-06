@@ -82,7 +82,7 @@ def aggregate(bigwig, centers, extsize, j = 8):
         column is a basepair.
     """
     matrix = numpy.nan_to_num(valuematrix(bigwig, centers, extsize, j))
-    return [ numpy.mean([ (x[i] if not numpy.isnan(x[i]) else 0.0) for x in matrix ]) for i in range(extsize * 2) ], matrix
+    return [ numpy.mean([ (x[i] if not numpy.isnan(x[i]) else 0.0) for x in matrix ]) for i in range(extsize * 2) ], [ [ float(x) for x in xx ] for xx in matrix ]
 
 def bedaggregate(bigwig, bed, extsize, j = 8):
     """
