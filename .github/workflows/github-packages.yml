@@ -21,11 +21,8 @@ jobs:
 
     # login to GitHub packages
     - name: Docker Login
-      uses: azure/docker-login@v1
-      with:
-        login-server: docker.pkg.github.com
-        username: $GITHUB_ACTOR
-        password: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo ${{ secrets.DOCKER_TOKEN }} | docker login --username "krews-community" --password-stdin docker.pkg.github.com
 
     # Build the Docker image
     - name: Build
