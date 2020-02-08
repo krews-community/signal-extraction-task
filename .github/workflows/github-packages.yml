@@ -19,6 +19,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
 
+    - name: Test
+      run: |
+        scripts/test.sh
+
     # login to GitHub packages
     - name: Docker Login
       run: |
