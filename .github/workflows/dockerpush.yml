@@ -25,6 +25,7 @@ jobs:
 
       - name: Run tests
         run: |
+	  apt-get install python3-setuptools
           scripts/test.sh
 
   # Push image to GitHub Package Registry.
