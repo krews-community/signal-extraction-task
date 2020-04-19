@@ -5,4 +5,4 @@ RUN apk add python3 py3-pip build-base python3-dev zlib-dev git libstdc++ && \
     apk del py3-pip build-base git
 COPY src/app/ /app
 COPY src/scripts/* /bin/
-RUN /var/cache/apk/*
+RUN rm -rf /var/cache/apk/*
