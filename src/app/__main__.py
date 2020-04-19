@@ -17,6 +17,7 @@ def main():
     aggregate.add_argument("--extsize", type = int, help = "number of basepairs to expand each region; default 500.", default = 500)
     aggregate.add_argument("--start-index", type = int, help = "Index of the first element to aggregate (inclusive); default 1.", default = 1)
     aggregate.add_argument("--end-index", type = int, help = "Index of the last element to aggregate (not inclusive); defaults to the end of the list.", default = None)
+    aggregate.add_argument("--resolution", type = int, help = "Bin size to use in basepairs; defaults to 1 (a single basepair)", default = 1)
     aggregate.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
     aggregate.set_defaults(func = runaggregate)
     
@@ -27,6 +28,7 @@ def main():
     matrix.add_argument("--extsize", type = int, help = "number of basepairs to expand each region; default 500.", default = 500)
     matrix.add_argument("--start-index", type = int, help = "Index of the first element to aggregate (inclusive); default 1.", default = 1)
     matrix.add_argument("--end-index", type = int, help = "Index of the last element to aggregate (not inclusive); defaults to the end of the list.", default = None)
+    matrix.add_argument("--resolution", type = int, help = "Bin size to use in basepairs; defaults to 1 (a single basepair)", default = 1)
     matrix.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
     matrix.set_defaults(func = runmatrix)
 

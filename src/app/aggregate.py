@@ -66,7 +66,14 @@ def valuematrix(bigwig, centers, extsize, j = 8):
         retval += readregionset
     return retval
 
-def aggregate(bigwig, centers, extsize, j = 8, startindex = 0, endindex = None):
+def condense(a, r = 1):
+    if r == 1: return a
+    rv = [ 0. for x in range(int(len(a) / r)) ]
+    for i in range(len(a)):
+        rv[int(math.floor(i / r))] += a[i]
+    return rv
+
+def aggregate(bigwig, centers, extsize, j = 8, startindex = 0, endindex = None, resolution = 1):
     """
     Aggregates signal around a given set of center points from the given BigWig file. For each region, if a strand
     is present and the region is on the minus strand, the order of the signal values is reversed.
@@ -78,22 +85,25 @@ def aggregate(bigwig, centers, extsize, j = 8, startindex = 0, endindex = None):
         j (int): number of threads to use; default is 8
         startindex (int): first index to include in the aggregate; default is 0
         endindex (int): last index to aggregate (not inclusive); default is None, indicating aggregation should continue to the end of the list.
+        resolution (int): if set, returns bins which represent the average signal across this number of basepairs.
 
     Returns:
         Tuple of aggregated and matrix-form results. The first element is a single vector of signal values, where each position
-        is a single basepair and the value is the average of the signal values from each region at that basepair. The second
-        element is the complete signal matrix, where each row is a region in the order of the "centers" parameter and each
-        column is a basepair. Regions which are missing from or out of range for the bigWig are represented by vectors of zeroes.
+        is a bin with a size determined by the resolution parameter and the value is the average of the signal values from each
+        region at that bin. The second element is the complete signal matrix, where each row is a region in the order of the "centers"
+        parameter and each column is a bin. Regions which are missing from or out of range for the bigWig are represented by vectors
+        of zeroes.
     """
     if endindex is None: endindex = len(centers)
     if endindex <= startindex: return [], []
     matrix = valuematrix(bigwig, centers[startindex : endindex], extsize, j)
     for i in range(len(matrix)):
         if len(matrix[i]) == 0: matrix[i] = [ 0. for _ in range(extsize * 2) ]
-    matrix = numpy.nan_to_num(matrix)
-    return [ numpy.mean([ (x[i] if not numpy.isnan(x[i]) else 0.) for x in matrix ]) for i in range(extsize * 2) ], [ [ float(x) for x in xx ] for xx in matrix ]
+    matrix = [ condense([ float(x) for x in xx ], resolution) for xx in numpy.nan_to_num(matrix) ]
+    aggregate = [ numpy.mean([ (x[i] if not numpy.isnan(x[i]) else 0.) for x in matrix ]) for i in range(len(matrix[0])) ]
+    return aggregate, matrix
 
-def bedaggregate(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None):
+def bedaggregate(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None, resolution = 1):
     """
     Aggregates signal around the center points of each region from a BED file, using signal from the given BigWig file.
     If the BED file has strand information, regions on the minus strand will be inverted before being aggregated; otherwise,
@@ -109,9 +119,10 @@ def bedaggregate(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None):
 
     Returns:
         Tuple of aggregated and matrix-form results. The first element is a single vector of signal values, where each position
-        is a single basepair and the value is the average of the signal values from each region at that basepair. The second
-        element is the complete signal matrix, where each row is a region in the order of the "centers" parameter and each
-        column is a basepair. Regions which are missing from or out of range for the bigWig are represented by vectors of zeroes.
+        is a bin with a size determined by the resolution parameter and the value is the average of the signal values from each
+        region at that basepair. The second element is the complete signal matrix, where each row is a region in the order of the
+        "centers" parameter and each column is a bin. Regions which are missing from or out of range for the bigWig are represented
+        by vectors of zeroes.
     """
     if not os.path.exists(bed):
         raise Exception("Error opening %s: no such file or directory." % bed)
@@ -121,4 +132,4 @@ def bedaggregate(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None):
             int((int(l.split('\t')[2].strip()) + int(l.split('\t')[1])) / 2),
             l.split('\t')[3].strip() if len(l.split('\t')) >= 4 else '.'
         ) for l in f ]
-    return aggregate(bigwig, centers, extsize, j, startindex, endindex)
+    return aggregate(bigwig, centers, extsize, j, startindex, endindex, resolution)
