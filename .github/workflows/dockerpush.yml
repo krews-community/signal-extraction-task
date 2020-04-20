@@ -84,5 +84,5 @@ jobs:
 
       - name: Publish to GCP
         run: |
-          docker tag image gcr.io/$GCP_PROJECT/$IMAGE:$GITHUB_SHA && \
-          docker push gcr.io/$GCP_PROJECT/$IMAGE:$GITHUB_SHA
+          docker tag image gcr.io/$GCP_PROJECT/$IMAGE_NAME:$GITHUB_SHA && \
+          docker push gcr.io/$GCP_PROJECT/$IMAGE_NAME:$GITHUB_SHA
