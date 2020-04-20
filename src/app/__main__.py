@@ -19,6 +19,7 @@ def main():
     aggregate.add_argument("--end-index", type = int, help = "Index of the last element to aggregate (not inclusive); defaults to the end of the list.", default = None)
     aggregate.add_argument("--resolution", type = int, help = "Bin size to use in basepairs; defaults to 1 (a single basepair)", default = 1)
     aggregate.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
+    aggregate.add_argument("--decimal-resolution", type = int, help = "Number of decimal places to keep in output.", default = 2)
     aggregate.set_defaults(func = runaggregate)
     
     matrix = subparsers.add_parser("matrix", help = "produce a signal matrix for the given regions")
@@ -30,6 +31,7 @@ def main():
     matrix.add_argument("--end-index", type = int, help = "Index of the last element to aggregate (not inclusive); defaults to the end of the list.", default = None)
     matrix.add_argument("--resolution", type = int, help = "Bin size to use in basepairs; defaults to 1 (a single basepair)", default = 1)
     matrix.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
+    matrix.add_argument("--decimal-resolution", type = int, help = "Number of decimal places to keep in output.", default = 2)
     matrix.set_defaults(func = runmatrix)
 
     args = parser.parse_args()

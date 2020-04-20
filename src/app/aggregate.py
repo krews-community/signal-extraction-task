@@ -66,14 +66,14 @@ def valuematrix(bigwig, centers, extsize, j = 8):
         retval += readregionset
     return retval
 
-def condense(a, r = 1):
+def condense(a, r = 1, dr = 2):
     if r == 1: return a
     rv = [ 0. for x in range(int(len(a) / r)) ]
     for i in range(len(a)):
         rv[int(math.floor(i / r))] += a[i]
-    return rv
+    return [ round(x, dr) for x in rv ]
 
-def aggregate(bigwig, centers, extsize, j = 8, startindex = 0, endindex = None, resolution = 1):
+def aggregate(bigwig, centers, extsize, j = 8, startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2):
     """
     Aggregates signal around a given set of center points from the given BigWig file. For each region, if a strand
     is present and the region is on the minus strand, the order of the signal values is reversed.
@@ -85,7 +85,8 @@ def aggregate(bigwig, centers, extsize, j = 8, startindex = 0, endindex = None, 
         j (int): number of threads to use; default is 8
         startindex (int): first index to include in the aggregate; default is 0
         endindex (int): last index to aggregate (not inclusive); default is None, indicating aggregation should continue to the end of the list.
-        resolution (int): if set, returns bins which represent the average signal across this number of basepairs.
+        resolution (int): if set, returns bins which represent the average signal across this number of basepairs
+        decimal_resolution (int): rounds values in the matrix and aggregate vector to the given number of decimal places
 
     Returns:
         Tuple of aggregated and matrix-form results. The first element is a single vector of signal values, where each position
@@ -100,10 +101,13 @@ def aggregate(bigwig, centers, extsize, j = 8, startindex = 0, endindex = None, 
     for i in range(len(matrix)):
         if len(matrix[i]) == 0: matrix[i] = [ 0. for _ in range(extsize * 2) ]
     matrix = [ condense([ float(x) for x in xx ], resolution) for xx in numpy.nan_to_num(matrix) ]
-    aggregate = [ numpy.mean([ (x[i] if not numpy.isnan(x[i]) else 0.) for x in matrix ]) for i in range(len(matrix[0])) ]
+    aggregate = [
+        round(numpy.mean([ (x[i] if not numpy.isnan(x[i]) else 0.) for x in matrix ]), decimal_resolution)
+        for i in range(len(matrix[0]))
+    ]
     return aggregate, matrix
 
-def bedaggregate(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None, resolution = 1):
+def bedaggregate(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2):
     """
     Aggregates signal around the center points of each region from a BED file, using signal from the given BigWig file.
     If the BED file has strand information, regions on the minus strand will be inverted before being aggregated; otherwise,
@@ -116,6 +120,8 @@ def bedaggregate(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None, r
         j (int): number of threads to use; default is 8
         startindex (int): first index to aggregate (inclusive); default is 0
         endindex (int): last index to aggregate (not inclusive); default is None, indicating aggregation should continue to the end of the list
+        resolution (int): if set, returns bins which represent the average signal across this number of basepairs
+        decimal_resolution (int): rounds values in the matrix and aggregate vector to the given number of decimal places
 
     Returns:
         Tuple of aggregated and matrix-form results. The first element is a single vector of signal values, where each position
@@ -132,4 +138,4 @@ def bedaggregate(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None, r
             int((int(l.split('\t')[2].strip()) + int(l.split('\t')[1])) / 2),
             l.split('\t')[3].strip() if len(l.split('\t')) >= 4 else '.'
         ) for l in f ]
-    return aggregate(bigwig, centers, extsize, j, startindex, endindex, resolution)
+    return aggregate(bigwig, centers, extsize, j, startindex, endindex, resolution, decimal_resolution)
