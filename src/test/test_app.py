@@ -14,8 +14,8 @@ class TestInput:
         self.bed_file = os.path.join(os.path.dirname(__file__), "resources", testbed)
         self.extsize = 5
         self.j = 1
-        self.startindex = startindex
-        self.endindex = endindex
+        self.start_index = startindex
+        self.end_index = endindex
         self.resolution = resolution
 
     def __enter__(self):
