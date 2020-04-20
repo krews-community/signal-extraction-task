@@ -58,7 +58,7 @@ def valuematrix(bigwig, centers, extsize, j = 8):
         for chrom, x, strand in centers
     ]
     divpoints = [ math.floor(len(regions) * i / j) for i in range(j) ] if len(regions) > j else list(range(len(regions)))
-    divpoints += [ divpoints[-1] + 1 ]
+    divpoints.append(len(regions))
     if j == 1: divpoints = [ 0, len(regions) ]
     readregions = Parallel(n_jobs = j)(delayed(read)(regions, divpoints, bigwig, i) for i in range(len(divpoints) - 1))
     retval = []
