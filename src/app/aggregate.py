@@ -139,3 +139,39 @@ def bedaggregate(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None, r
             l.split('\t')[3].strip() if len(l.split('\t')) >= 4 else '.'
         ) for l in f ]
     return aggregate(bigwig, centers, extsize, j, startindex, endindex, resolution, decimal_resolution)
+
+def bedAggregateByName(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2):
+    """
+    Aggregates signal around the center points of each region from a BED file, using signal from the given BigWig file.
+    If the BED file has strand information, regions on the minus strand will be inverted before being aggregated; otherwise,
+    all regions are assumed to be the same orientation. Results are grouped by the names in the fourth field of the BED file;
+    strand information, if present, must be given in the fifth field.
+
+    Args:
+        bigwig (string): path to the BigWig to read
+        bed (string): path to the BED file containing the regions to aggregate
+        extsize (int): number of basepairs to read around the center point; regions are extended by this amount in both directions
+        j (int): number of threads to use; default is 8
+        startindex (int): first index to aggregate (inclusive); default is 0
+        endindex (int): last index to aggregate (not inclusive); default is None, indicating aggregation should continue to the end of the list
+        resolution (int): if set, returns bins which represent the average signal across this number of basepairs
+        decimal_resolution (int): rounds values in the matrix and aggregate vector to the given number of decimal places
+
+    Returns:
+        Dictionary of aggregated results. Keys are names from the fourth BED field. Values are vectors of signal values, where each
+        position is a bin with a size determined by the resolution parameter and the value is the average of the signal values from each
+        region at that basepair.
+    """
+    if not os.path.exists(bed):
+        raise Exception("Error opening %s: no such file or directory." % bed)
+    centers = {}
+    with (gzip.open if bed.endswith(".gz") else open)(bed, 'rt') as f:
+        for line in f:
+            line = line.strip().split()
+            if line[3] not in centers: centers[line[3]] = []
+            centers[line[3]].append((
+                line[0],
+                int((int(line[2]) + int(line[1])) / 2),
+                line[4] if len(line) >= 5 else '.'
+            ))
+    return { k: aggregate(bigwig, v, extsize, j, startindex, endindex, resolution, decimal_resolution)[0] for k, v in centers.items() }

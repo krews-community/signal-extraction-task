@@ -20,6 +20,7 @@ def main():
     aggregate.add_argument("--resolution", type = int, help = "Bin size to use in basepairs; defaults to 1 (a single basepair)", default = 1)
     aggregate.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
     aggregate.add_argument("--decimal-resolution", type = int, help = "Number of decimal places to keep in output.", default = 2)
+    aggregate.add_argument("--grouped", action = "store_true", help = "If specified, groups output by the name field of each BED line.", default = False)
     aggregate.set_defaults(func = runaggregate)
     
     matrix = subparsers.add_parser("matrix", help = "produce a signal matrix for the given regions")

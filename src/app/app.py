@@ -2,10 +2,13 @@
 
 import ujson
 
-from .aggregate import bedaggregate
+from .aggregate import bedaggregate, bedAggregateByName
 
 def runaggregate(args):
-    values, _ = bedaggregate(args.signal_file, args.bed_file, args.extsize, args.j, args.start_index, args.end_index, args.resolution)
+    if not args.grouped:
+        values, _ = bedaggregate(args.signal_file, args.bed_file, args.extsize, args.j, args.start_index, args.end_index, args.resolution)
+    else:
+        values = bedAggregateByName(args.signal_file, args.bed_file, args.extsize, args.j, args.start_index, args.end_index, args.resolution)
     with open(args.output_file, 'w') as o:
         o.write(ujson.dumps(values) + '\n')
 

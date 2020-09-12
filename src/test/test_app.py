@@ -9,7 +9,7 @@ from app.app import runaggregate, runmatrix
 
 class TestInput:
     
-    def __init__(self, testbed = "test.bed", startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2):
+    def __init__(self, testbed = "test.bed", startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2, grouped = False):
         self.signal_file = os.path.join(os.path.dirname(__file__), "resources", "test.bigWig")
         self.bed_file = os.path.join(os.path.dirname(__file__), "resources", testbed)
         self.extsize = 5
@@ -18,6 +18,7 @@ class TestInput:
         self.end_index = endindex
         self.resolution = resolution
         self.decimal_resolution = decimal_resolution
+        self.grouped = grouped
 
     def __enter__(self):
         self.output = tempfile.NamedTemporaryFile()
@@ -60,3 +61,8 @@ class TestApp(unittest.TestCase):
         with TestInput(testbed = "test.offsets.bed", endindex = 2) as test:
             runaggregate(test)
             self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "5e0f8d2c34d3c796d46ad70b204f9068")
+
+    def test_runaggregate_grouped(self):
+        with TestInput(testbed = "test.group.bed", grouped = True) as test:
+            runaggregate(test)
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "05355371a11e2df119eab0ebadd99dd0")
