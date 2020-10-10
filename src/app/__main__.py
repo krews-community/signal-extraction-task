@@ -35,6 +35,7 @@ def main():
     matrix.add_argument("--resolution", type = int, help = "Bin size to use in basepairs; defaults to 1 (a single basepair)", default = 1)
     matrix.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
     matrix.add_argument("--decimal-resolution", type = int, help = "Number of decimal places to keep in output.", default = 2)
+    matrix.add_argument("--coordinate-map", action = "store_true", default = False, help = "if set, output JSON maps coordinates to values")
     matrix.set_defaults(func = runmatrix)
 
     sequence = subparsers.add_parser("sequence", help = "extract one hot encoded sequence for the given regions from a 2bit file")
@@ -43,6 +44,7 @@ def main():
     sequence.add_argument("--output-file", type = str, help = "Path to write the output, in JSON format.", required = True)
     sequence.add_argument("--extsize", type = int, help = "number of basepairs to expand each region; default 500.", default = 500)
     sequence.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
+    sequence.add_argument("--coordinate-map", action = "store_true", default = False, help = "if set, output JSON maps coordinates to values")
     sequence.set_defaults(func = runsequence)
 
     args = parser.parse_args()

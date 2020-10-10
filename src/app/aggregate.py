@@ -156,6 +156,7 @@ def bedAggregateByName(bigwig, bed, extsize, j = 8, startindex = 0, endindex = N
         endindex (int): last index to aggregate (not inclusive); default is None, indicating aggregation should continue to the end of the list
         resolution (int): if set, returns bins which represent the average signal across this number of basepairs
         decimal_resolution (int): rounds values in the matrix and aggregate vector to the given number of decimal places
+        name_by_coordinates (boolean): if true, names are coordinate ranges rather than values in the name field
 
     Returns:
         Dictionary of aggregated results. Keys are names from the fourth BED field. Values are vectors of signal values, where each

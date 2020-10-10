@@ -9,17 +9,21 @@ from app.app import runaggregate, runmatrix, runsequence
 
 class TestInput:
     
-    def __init__(self, testbed = "test.bed", startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2, grouped = False):
+    def __init__(
+        self, testbed = "test.bed", startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2, grouped = False,
+        coordinate_map = False, extsize = 5
+    ):
         self.signal_file = os.path.join(os.path.dirname(__file__), "resources", "test.bigWig")
         self.two_bit_file = os.path.join(os.path.dirname(__file__), "resources", "chrTest.2bit")
         self.bed_file = os.path.join(os.path.dirname(__file__), "resources", testbed)
-        self.extsize = 5
+        self.extsize = extsize
         self.j = 1
         self.start_index = startindex
         self.end_index = endindex
         self.resolution = resolution
         self.decimal_resolution = decimal_resolution
         self.grouped = grouped
+        self.coordinate_map = coordinate_map
 
     def __enter__(self):
         self.output = tempfile.NamedTemporaryFile()
@@ -47,6 +51,11 @@ class TestApp(unittest.TestCase):
         with TestInput() as test:
             runmatrix(test)
             self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "b9b14755e8fd0c29342fb417aa0db286")
+        
+    def test_runmatrix_coordinate_map(self):
+        with TestInput(coordinate_map = True) as test:
+            runmatrix(test)
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "e3d6c138cbc8ee90504fdaf882e1f079")
 
     def test_runmatrix_10(self):
         with TestInput(resolution = 2) as test:
@@ -69,6 +78,11 @@ class TestApp(unittest.TestCase):
             self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "05355371a11e2df119eab0ebadd99dd0")
 
     def test_runsequence(self):
-        with TestInput(testbed = "test.chrTest.bed", grouped = True) as test:
+        with TestInput(testbed = "test.chrTest.bed") as test:
             runsequence(test)
-            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "a4271d6a803b6801bbbbe48e62d6a826")
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "dd2cc6bab4f4c52ccd0d1a0a7304305d")
+
+    def test_runsequence_coordinate_map(self):
+        with TestInput(testbed = "test.chrTest.bed", coordinate_map = True, extsize = 7) as test:
+            runsequence(test)
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "5afdc7cc68a552004f036e537c2b2f76")

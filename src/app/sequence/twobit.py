@@ -3,9 +3,13 @@
 import twobitreader
 from typing import List
 
-from .onehot import onehot
+from .onehot import onehot, ONEHOT
 
 class TwoBitReader:
+
+    @staticmethod
+    def pad(a, l):
+        return a + [ ONEHOT['n'] for _ in range(l - len(a)) ]
 
     def __init__(self, path: str):
         self.path = path
@@ -18,4 +22,9 @@ class TwoBitReader:
         self.twobit.close()
 
     def read(self, chromosome: str, start: int, end: int) -> List[int]:
-        return onehot(self.twobit[chromosome][start:end])
+        try:
+            if start < 0:
+                return [ ONEHOT['n'] for _ in range(start, 0) ] + onehot(self.twobit[chromosome][:end])
+            return TwoBitReader.pad( onehot(self.twobit[chromosome][start:end]), end - start )
+        except:
+            return [ ONEHOT['n'] for _ in range(end - start) ]
