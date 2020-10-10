@@ -5,12 +5,13 @@ import tempfile
 import unittest
 import hashlib
 
-from app.app import runaggregate, runmatrix
+from app.app import runaggregate, runmatrix, runsequence
 
 class TestInput:
     
     def __init__(self, testbed = "test.bed", startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2, grouped = False):
         self.signal_file = os.path.join(os.path.dirname(__file__), "resources", "test.bigWig")
+        self.two_bit_file = os.path.join(os.path.dirname(__file__), "resources", "chrTest.2bit")
         self.bed_file = os.path.join(os.path.dirname(__file__), "resources", testbed)
         self.extsize = 5
         self.j = 1
@@ -66,3 +67,8 @@ class TestApp(unittest.TestCase):
         with TestInput(testbed = "test.group.bed", grouped = True) as test:
             runaggregate(test)
             self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "05355371a11e2df119eab0ebadd99dd0")
+
+    def test_runsequence(self):
+        with TestInput(testbed = "test.chrTest.bed", grouped = True) as test:
+            runsequence(test)
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "a4271d6a803b6801bbbbe48e62d6a826")

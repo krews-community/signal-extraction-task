@@ -3,7 +3,9 @@
 import sys
 import argparse
 
-from .app import runaggregate, runmatrix
+from .app import runaggregate, runmatrix, runsequence
+from .aggregate import bedaggregate
+from .sequence.twobit import TwoBitReader
 
 def main():
     
@@ -34,6 +36,14 @@ def main():
     matrix.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
     matrix.add_argument("--decimal-resolution", type = int, help = "Number of decimal places to keep in output.", default = 2)
     matrix.set_defaults(func = runmatrix)
+
+    sequence = subparsers.add_parser("sequence", help = "extract one hot encoded sequence for the given regions from a 2bit file")
+    sequence.add_argument("--bed-file", type = str, help = "Path to the BED file with the regions for which to extract sequence.", required = True)
+    sequence.add_argument("--two-bit-file", type = str, help = "Path to a 2bit file with the genomic sequence.", required = True)
+    sequence.add_argument("--output-file", type = str, help = "Path to write the output, in JSON format.", required = True)
+    sequence.add_argument("--extsize", type = int, help = "number of basepairs to expand each region; default 500.", default = 500)
+    sequence.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
+    sequence.set_defaults(func = runsequence)
 
     args = parser.parse_args()
     args.func(args)
