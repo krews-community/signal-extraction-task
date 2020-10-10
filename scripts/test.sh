@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-python3 -m pip install --user joblib ujson pyBigWig numpy
+python3 -m pip install --user joblib ujson pyBigWig numpy twobitreader
 
 # cd to project root directory
 cd "$(dirname "$(dirname "$0")")"
