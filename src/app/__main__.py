@@ -46,7 +46,7 @@ def main():
     sequence.add_argument("--extsize", type = int, help = "number of basepairs to expand each region; default 500.", default = 500)
     sequence.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
     sequence.add_argument("--coordinate-map", action = "store_true", default = False, help = "if set, output JSON maps coordinates to values")
-    matrix.add_argument("--streaming", action = "store_true", default = False, help = "if set, batches of results are streamed to an output file rather than kept in memory")
+    sequence.add_argument("--streaming", action = "store_true", default = False, help = "if set, batches of results are streamed to an output file rather than kept in memory")
     sequence.set_defaults(func = runsequence)
 
     args = parser.parse_args()
