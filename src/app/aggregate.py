@@ -133,12 +133,15 @@ def bedaggregate(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None, r
     if not os.path.exists(bed):
         raise Exception("Error opening %s: no such file or directory." % bed)
     with (gzip.open if bed.endswith(".gz") else open)(bed, 'rt') as f:
-        centers = [(
-            l.split('\t')[0],
-            int((int(l.split('\t')[2].strip()) + int(l.split('\t')[1])) / 2),
-            l.split('\t')[3].strip() if len(l.split('\t')) >= 4 else '.'
-        ) for l in f ]
+        centers = [ summit(l) for l in f ]
     return aggregate(bigwig, centers, extsize, j, startindex, endindex, resolution, decimal_resolution)
+
+def summit(l):
+    return (
+        l.split('\t')[0],
+        int((int(l.split('\t')[2].strip()) + int(l.split('\t')[1])) / 2),
+        l.split('\t')[3].strip() if len(l.split('\t')) >= 4 else '.'
+    )
 
 def bedAggregateByName(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2):
     """

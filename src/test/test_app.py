@@ -11,7 +11,7 @@ class TestInput:
     
     def __init__(
         self, testbed = "test.bed", startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2, grouped = False,
-        coordinate_map = False, extsize = 5
+        coordinate_map = False, extsize = 5, streaming = False
     ):
         self.signal_file = os.path.join(os.path.dirname(__file__), "resources", "test.bigWig")
         self.two_bit_file = os.path.join(os.path.dirname(__file__), "resources", "chrTest.2bit")
@@ -24,6 +24,8 @@ class TestInput:
         self.decimal_resolution = decimal_resolution
         self.grouped = grouped
         self.coordinate_map = coordinate_map
+        self.batch_size = 3
+        self.streaming = streaming
 
     def __enter__(self):
         self.output = tempfile.NamedTemporaryFile()
@@ -55,7 +57,23 @@ class TestApp(unittest.TestCase):
     def test_runmatrix_coordinate_map(self):
         with TestInput(coordinate_map = True) as test:
             runmatrix(test)
-            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "e3d6c138cbc8ee90504fdaf882e1f079")
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "53a11a17db1d51d5646542783fa551ac")
+
+    def test_runmatrix_streamed(self):
+        with TestInput(streaming = True) as test:
+            runmatrix(test)
+            streamed = hashlib.md5(test.output.read()).hexdigest()
+        with TestInput() as test:
+            runmatrix(test)
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), streamed)
+        
+    def test_runmatrix_coordinate_map_streamed(self):
+        with TestInput(coordinate_map = True, streaming = True) as test:
+            runmatrix(test)
+            streamed = hashlib.md5(test.output.read()).hexdigest()
+        with TestInput(coordinate_map = True) as test:
+            runmatrix(test)
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), streamed)
 
     def test_runmatrix_10(self):
         with TestInput(resolution = 2) as test:
@@ -86,3 +104,19 @@ class TestApp(unittest.TestCase):
         with TestInput(testbed = "test.chrTest.bed", coordinate_map = True, extsize = 7) as test:
             runsequence(test)
             self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "5afdc7cc68a552004f036e537c2b2f76")
+
+    def test_runsequence_stream(self):
+        with TestInput(testbed = "test.chrTest.bed", extsize = 7, streaming = True) as test:
+            runsequence(test)
+            streamed = hashlib.md5(test.output.read()).hexdigest()
+        with TestInput(testbed = "test.chrTest.bed", extsize = 7) as test:
+            runsequence(test)
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), streamed)
+
+    def test_runsequence_coordinate_map_stream(self):
+        with TestInput(testbed = "test.chrTest.bed", coordinate_map = True, extsize = 7, streaming = True) as test:
+            runsequence(test)
+            streamed = hashlib.md5(test.output.read()).hexdigest()
+        with TestInput(testbed = "test.chrTest.bed", coordinate_map = True, extsize = 7) as test:
+            runsequence(test)
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), streamed)
