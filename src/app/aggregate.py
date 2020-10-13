@@ -138,9 +138,9 @@ def bedaggregate(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None, r
 
 def summit(l):
     return (
-        l.split('\t')[0],
-        int((int(l.split('\t')[2].strip()) + int(l.split('\t')[1])) / 2),
-        l.split('\t')[3].strip() if len(l.split('\t')) >= 4 else '.'
+        l.split()[0],
+        int((int(l.split()[2].strip()) + int(l.split()[1])) / 2),
+        l.split()[3].strip() if len(l.split()) >= 4 else '.'
     )
 
 def bedAggregateByName(bigwig, bed, extsize, j = 8, startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2):

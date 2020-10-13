@@ -3,7 +3,7 @@
 import sys
 import argparse
 
-from .app import runaggregate, runmatrix, runsequence
+from .app import runaggregate, runmatrix, runsequence, runzscore
 from .aggregate import bedaggregate
 from .sequence.twobit import TwoBitReader
 
@@ -48,6 +48,14 @@ def main():
     sequence.add_argument("--coordinate-map", action = "store_true", default = False, help = "if set, output JSON maps coordinates to values")
     sequence.add_argument("--streaming", action = "store_true", default = False, help = "if set, batches of results are streamed to an output file rather than kept in memory")
     sequence.set_defaults(func = runsequence)
+
+    zscore = subparsers.add_parser("zscore", help = "computes Z-scores for aggregated signal across a list of regions")
+    zscore.add_argument("--bed-file", type = str, help = "Path to the BED file with the regions to aggregate.", required = True)
+    zscore.add_argument("--signal-file", type = str, help = "Path to a BigWig file with the signal to aggregate.", required = True)
+    zscore.add_argument("--output-file", type = str, help = "Path to write the output, in BED format.", required = True)
+    zscore.add_argument("--extsize", type = int, help = "extends each region by the given number of basepairs in each direction around the center points.", default = 150)
+    zscore.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
+    zscore.set_defaults(func = runzscore)
 
     args = parser.parse_args()
     args.func(args)

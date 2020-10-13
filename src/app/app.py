@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 import ujson
+import numpy
+import math
+from joblib import Parallel, delayed
 
 from .aggregate import bedaggregate, bedAggregateByName, summit, aggregate
 from .sequence.twobit import TwoBitReader
@@ -22,6 +25,40 @@ def runaggregate(args):
         )
     with open(args.output_file, 'w') as o:
         o.write(ujson.dumps(values) + '\n')
+
+def flatten(l):
+    r = []
+    for x in l:
+        r += x
+    return r
+
+def runzscore(args):
+    batchsize = batch_size(args)
+    batches = []
+    def mean(cbatch):
+        _, matrix = aggregate(
+            args.signal_file, cbatch, args.extsize, args.j, args.start_index, args.end_index, args.resolution, args.decimal_resolution
+        )
+        return [ sum(x) for x in matrix ]
+    with open(args.bed_file, 'r') as f:
+        batch = []
+        for line in f:
+            if len(batch) == batchsize:
+                batches.append(batch)
+                batch = []
+            batch.append(summit(line))
+        batches.append(batch)
+    results = flatten( Parallel(n_jobs = args.j)(delayed(mean)(x) for x in batches) )
+    mean = numpy.mean([ math.log(x) for x in results if x > 0 ])
+    std = numpy.std([ math.log(x) for x in results if x > 0 ])
+    minv = math.floor((min([ math.log(x) for x in results if x > 0 ]) - mean) / std)
+    results = [ (math.log(x) - mean) / std if x > 0 else minv for x in results ]
+    with open(args.bed_file, 'r') as f:
+        with open(args.output_file, 'w') as o:
+            i = 0
+            for line in f:
+                o.write("%s\t%.3f\n" % ('\t'.join(line.strip().split()[:4]), results[i]))
+                i += 1
 
 def sregion(summit, extsize):
     c, s, _ = summit

@@ -5,7 +5,7 @@ import tempfile
 import unittest
 import hashlib
 
-from app.app import runaggregate, runmatrix, runsequence
+from app.app import runaggregate, runmatrix, runsequence, runzscore
 
 class TestInput:
     
@@ -43,6 +43,11 @@ class TestApp(unittest.TestCase):
         with TestInput() as test:
             runaggregate(test)
             self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "ef3de94cf04e83f8b924aa1275692ef7")
+    
+    def test_runzscore(self):
+        with TestInput(testbed = "test.chrTest.signal.bed") as test:
+            runzscore(test)
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "dd2c77810c0911feb6b56460793c80e1")
 
     def test_runaggregate_10(self):
         with TestInput(resolution = 2) as test:
