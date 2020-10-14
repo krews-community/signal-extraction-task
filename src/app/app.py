@@ -37,7 +37,7 @@ def runzscore(args):
     batches = []
     def mean(cbatch):
         _, matrix = aggregate(
-            args.signal_file, cbatch, args.extsize, args.j, args.start_index, args.end_index, args.resolution, args.decimal_resolution
+            args.signal_file, cbatch, args.extsize, args.j, args.start_index, args.end_index
         )
         return [ sum(x) for x in matrix ]
     with open(args.bed_file, 'r') as f:
