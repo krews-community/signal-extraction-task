@@ -55,7 +55,7 @@ def main():
     zscore.add_argument("--output-file", type = str, help = "Path to write the output, in BED format.", required = True)
     zscore.add_argument("--start-index", type = int, help = "Index of the first element to aggregate (inclusive); default 1.", default = 0)
     zscore.add_argument("--end-index", type = int, help = "Index of the last element to aggregate (not inclusive); defaults to the end of the list.", default = None)
-    zscore.add_argument("--extsize", type = int, help = "extends each region by the given number of basepairs in each direction around the center points.", default = 150)
+    zscore.add_argument("--extsize", type = int, help = "if passed, extends each region by the given number of basepairs in each direction around the center points.", default = None)
     zscore.add_argument("-j", type = int, help = "number of cores to use in parallel; default 8.", default = 8)
     zscore.set_defaults(func = runzscore)
 

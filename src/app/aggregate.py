@@ -8,6 +8,13 @@ import gzip
 
 from joblib import Parallel, delayed
 
+def bwvalue(region, bw):
+    t = tuple(region[:3])
+    try:
+        return ( bw.values(*t) if region[3] != '-' else list(reversed(bw.values(*t))) )
+    except:
+        return []
+
 def read(regions, divpoints, bigwig, i):
     """
     Reads signal for a given set of regions from a BigWig. Intended to be called in Parallel; data are read only
@@ -29,12 +36,12 @@ def read(regions, divpoints, bigwig, i):
     if bw is None:
         raise Exception("Error opening %s: no such file or directory." % bigwig)
     values = [
-        ( bw.values(*tuple(region[:3])) if region[3] != '-' else list(reversed(bw.values(*tuple(region[:3])))) ) if region is not None else []
+        bwvalue(region, bw) if region is not None else []
         for region in regions[divpoints[i]:divpoints[i + 1]]
     ]
-    return values
+    return [ [ x if not numpy.isnan(x) else 0 for x in xx ] for xx in values ]
 
-def valuematrix(bigwig, centers, extsize, j = 8):
+def valuematrix(bigwig, centers, extsize, j = 8, noextension = False):
     """
     Reads signal for a given set of regions from a BigWig in parallel. Each region is uniformly sized around the
     centers points passed in the "centers" parameter. For each region, if a strand is present and the region is on
@@ -53,7 +60,7 @@ def valuematrix(bigwig, centers, extsize, j = 8):
     bw = pyBigWig.open(bigwig)
     if bw is None:
         raise Exception("Error opening %s: no such file or directory." % bigwig)
-    regions = [
+    regions = centers if noextension else [
         (chrom, x - extsize, x + extsize, strand) if x >= extsize and bw.chroms(chrom) is not None and x + extsize < bw.chroms(chrom) else None
         for chrom, x, strand in centers
     ]
@@ -73,7 +80,7 @@ def condense(a, r = 1, dr = 2):
         rv[int(math.floor(i / r))] += a[i]
     return [ round(x, dr) for x in rv ]
 
-def aggregate(bigwig, centers, extsize, j = 8, startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2):
+def aggregate(bigwig, centers, extsize, j = 8, startindex = 0, endindex = None, resolution = 1, decimal_resolution = 2, noextension = False):
     """
     Aggregates signal around a given set of center points from the given BigWig file. For each region, if a strand
     is present and the region is on the minus strand, the order of the signal values is reversed.
@@ -97,7 +104,8 @@ def aggregate(bigwig, centers, extsize, j = 8, startindex = 0, endindex = None, 
     """
     if endindex is None: endindex = len(centers)
     if endindex <= startindex: return [], []
-    matrix = valuematrix(bigwig, centers[startindex : endindex], extsize, j)
+    matrix = valuematrix(bigwig, centers[startindex : endindex], extsize, j, noextension)
+    if extsize is None: return None, matrix
     for i in range(len(matrix)):
         if len(matrix[i]) == 0: matrix[i] = [ 0. for _ in range(extsize * 2) ]
     matrix = [ condense([ float(x) for x in xx ], resolution) for xx in numpy.nan_to_num(matrix) ]

@@ -47,7 +47,12 @@ class TestApp(unittest.TestCase):
     def test_runzscore(self):
         with TestInput(testbed = "test.chrTest.signal.bed") as test:
             runzscore(test)
-            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "dd2c77810c0911feb6b56460793c80e1")
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "a9309e8fa95fb36d6651842f9bc086ea")
+    
+    def test_runzscore_no_extension(self):
+        with TestInput(testbed = "test.chrTest.signal.bed", extsize = None) as test:
+            runzscore(test)
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "0e3397fce1282ab6b4ad26955c2264b9")
 
     def test_runaggregate_10(self):
         with TestInput(resolution = 2) as test:
@@ -103,12 +108,12 @@ class TestApp(unittest.TestCase):
     def test_runsequence(self):
         with TestInput(testbed = "test.chrTest.bed") as test:
             runsequence(test)
-            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "dd2cc6bab4f4c52ccd0d1a0a7304305d")
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "6efa138a53b74e9cdf7489367cde7832")
 
     def test_runsequence_coordinate_map(self):
         with TestInput(testbed = "test.chrTest.bed", coordinate_map = True, extsize = 7) as test:
             runsequence(test)
-            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "5afdc7cc68a552004f036e537c2b2f76")
+            self.assertEqual(hashlib.md5(test.output.read()).hexdigest(), "b6b4aff95070cf5a11a0e4d1617b4eb6")
 
     def test_runsequence_stream(self):
         with TestInput(testbed = "test.chrTest.bed", extsize = 7, streaming = True) as test:
