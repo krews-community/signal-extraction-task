@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import os
 import ujson
 import numpy
 import math
+import tempfile
 from joblib import Parallel, delayed
 
 from .aggregate import bedaggregate, bedAggregateByName, summit, aggregate
@@ -45,10 +47,13 @@ def runzscore(args):
     results = [ (math.log(x) - mean) / std if x > 0 else minv for x in results ]
     with open(args.bed_file, 'r') as f:
         with open(args.output_file, 'w') as o:
-            i = 0
-            for line in f:
-                o.write("%s\t%.3f\n" % ('\t'.join(line.strip().split()[:4]), results[i]))
-                i += 1
+            if args.json:
+                o.write(ujson.dumps(results) + '\n')
+            else:
+                i = 0
+                for line in f:
+                    o.write("%s\t%.3f\n" % ('\t'.join(line.strip().split()[:4]), results[i]))
+                    i += 1
 
 def sregion(summit, extsize):
     c, s, _ = summit
@@ -71,13 +76,28 @@ def runmatrix_stream(args):
         if args.coordinate_map: matrix = { sregion(cbatch[i], args.extsize): x for i, x in enumerate(matrix) }
         o.write(("," if not first else "") + ujson.dumps(matrix)[1:-1])
         first = False
+        return []
+    def writeSeekable(cbatch, o, _):
+        _, matrix = aggregate(
+            args.signal_file, cbatch, args.extsize, args.j, args.start_index, args.end_index, args.resolution, args.decimal_resolution
+        )
+        dumped = [ ujson.dumps(x) + '\n' for x in matrix ]
+        o.write("".join(dumped))
+        return [ len(x) for x in dumped ]
+    r = []
     with open(args.output_file, 'w') as o:
-        o.write("{" if args.coordinate_map else "[")
+        if not args.random_access: o.write("{" if args.coordinate_map else "[")
         with BatchedFile(args.bed_file, batchsize) as f:
             for batch in f:
-                write([ summit(x) for x in batch ], o, first)
+                r += (writeSeekable if args.random_access else write)([ summit(x) for x in batch ], o, first)
                 first = False
-        o.write("}\n" if args.coordinate_map else "]\n")
+        if not args.random_access: o.write("}\n" if args.coordinate_map else "]\n")
+    if args.random_access:
+        with tempfile.NamedTemporaryFile('wt') as tf:
+            tf.write(ujson.dumps(r) + '\n')
+            tf.flush()
+            with tempfile.NamedTemporaryFile() as ff:
+                os.system("cat %s %s > %s && cp %s %s" % (tf.name, args.output_file, ff.name, ff.name, args.output_file))
 
 def runmatrix_all(args):
     _, matrix = bedaggregate(
@@ -110,14 +130,26 @@ def runsequence_stream(args):
         else:
             results = { "%s:%s-%s" % seqregion(x, args.extsize): t.read(*seqregion(x, args.extsize)) for x in cbatch }
         o.write(("," if not first else "") + ujson.dumps(results)[1:-1])
+        return []
+    def writeSeekable(cbatch, t, o, _):
+        dumped = [ ujson.dumps(t.read(*seqregion(x, args.extsize))) + '\n' for x in cbatch ]
+        o.write("".join(dumped))
+        return [ len(x) for x in dumped ]
+    r = []
     with open(args.output_file, 'w') as o:
-        o.write("{" if args.coordinate_map else "[")
+        if not args.random_access: o.write("{" if args.coordinate_map else "[")
         with TwoBitReader(args.two_bit_file) as t:
             with BatchedFile(args.bed_file, batchsize) as f:
                 for batch in f:
-                    write(batch, t, o, first)
+                    r += (writeSeekable if args.random_access else write)(batch, t, o, first)
                     first = False
-        o.write("}\n" if args.coordinate_map else "]\n")
+        if not args.random_access: o.write("}\n" if args.coordinate_map else "]\n")
+    if args.random_access:
+        with tempfile.NamedTemporaryFile('wt') as tf:
+            tf.write(ujson.dumps(r) + '\n')
+            tf.flush()
+            with tempfile.NamedTemporaryFile() as ff:
+                os.system("cat %s %s > %s && cp %s %s" % (tf.name, args.output_file, ff.name, ff.name, args.output_file))
 
 def runsequence_all(args):
     with TwoBitReader(args.two_bit_file) as t:
